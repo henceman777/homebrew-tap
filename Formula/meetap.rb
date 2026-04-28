@@ -38,12 +38,15 @@ class Meetap < Formula
     bin.install_symlink venv => "meetap-venv"
   end
 
+  def post_install
+    unless system("brew", "list", "--cask", "blackhole-2ch", out: File::NULL, err: File::NULL)
+      ohai "Installing BlackHole 2ch (virtual audio driver)..."
+      system "brew", "install", "--cask", "blackhole-2ch"
+    end
+  end
+
   def caveats
     <<~EOS
-      BlackHole 2ch (virtual audio driver) is required:
-
-        brew install --cask blackhole-2ch
-
       AWS CLI must be configured with Transcribe + Bedrock permissions:
 
         aws configure
