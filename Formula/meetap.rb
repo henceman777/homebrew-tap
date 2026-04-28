@@ -2,7 +2,7 @@ class Meetap < Formula
   desc "macOS meeting recorder with auto-transcription and AI meeting notes"
   homepage "https://github.com/henceman777/meetap"
   url "https://github.com/henceman777/meetap/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "33acddfcfe40e90937d1bfd492ffbd0078ae22730694f0d190da249470dcfea0"
+  sha256 "7eeeb6146156e629f2a6ac46fea38dd829ad5f12625555e16bdcc0606a16165c"
   license "MIT"
 
   depends_on :macos
