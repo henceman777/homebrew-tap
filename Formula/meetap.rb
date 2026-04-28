@@ -29,7 +29,8 @@ class Meetap < Formula
     bin.install buildpath/"audio-multi-output"
     bin.install buildpath/"audio-monitor"
 
-    etc.install "config.default" => "meetap/config.default"
+    (etc/"meetap").mkpath
+    (etc/"meetap").install "config.default"
 
     venv = libexec/"meetap-venv"
     system "python3", "-m", "venv", venv.to_s
