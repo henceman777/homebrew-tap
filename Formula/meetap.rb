@@ -33,8 +33,8 @@ class Meetap < Formula
     (etc/"meetap").install "config.default"
 
     venv = libexec/"meetap-venv"
-    system "python3", "-m", "venv", venv.to_s
-    system venv/"bin/pip", "install", "-q", "boto3"
+    system "python3", "-m", "venv", "--system-site-packages", venv.to_s
+    system venv/"bin/pip", "install", "-q", "--timeout", "30", "boto3"
     bin.install_symlink venv => "meetap-venv"
   end
 
