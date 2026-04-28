@@ -43,6 +43,11 @@ class Meetap < Formula
       ohai "Installing BlackHole 2ch (virtual audio driver)..."
       system "brew", "install", "--cask", "blackhole-2ch"
     end
+    ohai "Restarting Core Audio to detect BlackHole..."
+    unless system("sudo", "killall", "coreaudiod")
+      opoo "Could not restart coreaudiod. If BlackHole is not detected, run: sudo killall coreaudiod"
+    end
+    sleep 3
   end
 
   def caveats
