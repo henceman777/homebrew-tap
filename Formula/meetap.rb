@@ -2,7 +2,7 @@ class Meetap < Formula
   desc "macOS meeting recorder with auto-transcription and AI meeting notes"
   homepage "https://github.com/henceman777/meetap"
   url "https://github.com/henceman777/meetap/archive/refs/tags/v0.2.0.tar.gz"
-  sha256 "7eeeb6146156e629f2a6ac46fea38dd829ad5f12625555e16bdcc0606a16165c"
+  sha256 "e7a513296cfd852eddc3eed15f35fc7047a23003b197a26540f92164d1b3b441"
   license "MIT"
 
   depends_on :macos
@@ -34,7 +34,7 @@ class Meetap < Formula
 
     venv = libexec/"meetap-venv"
     system "python3", "-m", "venv", "--system-site-packages", venv.to_s
-    system venv/"bin/pip", "install", "-q", "--timeout", "30", "boto3"
+    system venv/"bin/pip", "install", "-q", "--timeout", "60", "boto3", "PyMuPDF"
     bin.install_symlink venv => "meetap-venv"
   end
 
