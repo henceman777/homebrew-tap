@@ -1,8 +1,8 @@
 class Meetap < Formula
   desc "macOS meeting recorder with auto-transcription and AI meeting notes"
   homepage "https://github.com/henceman777/meetap"
-  url "https://github.com/henceman777/meetap/archive/refs/tags/v0.2.2.tar.gz"
-  sha256 "1de3cadeb2201c6505f784b87feb7dd51dd628ca73c74f010e4804578c937ef2"
+  url "https://github.com/henceman777/meetap/archive/refs/tags/v1.0.0.tar.gz"
+  sha256 "e1f59858c2189d98cb42025b0a621bc6023987c0bc454bb5fccf9a4898e8bdfd"
   license "MIT"
 
   depends_on :macos
@@ -29,6 +29,10 @@ class Meetap < Formula
     bin.install buildpath/"audio-multi-output"
     bin.install buildpath/"audio-monitor"
 
+    # CLI bilingual message tables (required by meetap's load_i18n)
+    (share/"meetap/i18n").install Dir["src/i18n/*.sh"]
+
+    # Default config template used by ensure_config on first run
     (etc/"meetap").mkpath
     (etc/"meetap").install "config.default"
 
@@ -56,9 +60,11 @@ class Meetap < Formula
 
         aws configure
 
-      Initialize your config:
+      A default config is auto-created at ~/.config/meetap/config on
+      first run. Edit it any time with:
 
-        meetap config init
+        meetap config          # opens $EDITOR
+        meetap config show     # prints current values
 
       Default config template: #{etc}/meetap/config.default
     EOS
