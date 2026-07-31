@@ -1,8 +1,8 @@
 class Meetap < Formula
   desc "macOS meeting recorder with auto-transcription and AI meeting notes"
   homepage "https://github.com/henceman777/meetap"
-  url "https://github.com/henceman777/meetap/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "e1f59858c2189d98cb42025b0a621bc6023987c0bc454bb5fccf9a4898e8bdfd"
+  url "https://github.com/henceman777/meetap/archive/refs/tags/v1.5.0.tar.gz"
+  sha256 "2a2208ff00932707353f75e1c6736028c051f69ba6c0dd919ad33b762bb02c33"
   license "MIT"
 
   depends_on :macos
@@ -25,33 +25,45 @@ class Meetap < Formula
            "src/audio-monitor.swift",
            "-o", buildpath/"audio-monitor"
 
+    # audio-tap 必须嵌入 Info.plist（NSAudioCaptureUsageDescription），否则 TCC
+    # 不弹授权框、静默拒绝，Process Tap 输出全零静音（macOS 14.4+ 主采集路径）。
+    system "swiftc", "-O",
+           "-framework", "CoreAudio",
+           "-framework", "AudioToolbox",
+           "-Xlinker", "-sectcreate",
+           "-Xlinker", "__TEXT",
+           "-Xlinker", "__info_plist",
+           "-Xlinker", "src/audio-tap-Info.plist",
+           "src/audio-tap.swift",
+           "-o", buildpath/"audio-tap"
+
     bin.install "src/meetap"
     bin.install buildpath/"audio-multi-output"
     bin.install buildpath/"audio-monitor"
+    bin.install buildpath/"audio-tap"
 
-    # CLI bilingual message tables (required by meetap's load_i18n)
+    # bin.install 复制会破坏 ad-hoc 签名（带 __info_plist 段尤甚），TCC 判定签名
+    # 无效后内核会在创建 Process Tap 时 SIGKILL 进程。安装后必须重新签名。
+    system "codesign", "--force", "--sign", "-", bin/"audio-tap"
+
+    # meetap 通过 SCRIPT_DIR/../src/lib/ui.sh 加载终端 UI 辅助脚本
+    (prefix/"src/lib").install "src/lib/ui.sh"
+
+    # CLI 双语消息表（load_i18n 需要）
     (share/"meetap/i18n").install Dir["src/i18n/*.sh"]
 
-    # Default config template used by ensure_config on first run
-    (etc/"meetap").mkpath
-    (etc/"meetap").install "config.default"
+    # 纪要提示词模板 + 邮件 HTML 模板
+    (share/"meetap/prompts").install Dir["share/meetap/prompts/*.md"]
+    (share/"meetap/templates").install Dir["share/meetap/templates/*.html"]
 
+    # 首次运行时 ensure_config 拷贝的默认配置模板
+    (share/"meetap").install "config.default"
+
+    # Python venv：纪要生成（boto3）+ 邮件 Markdown 渲染（markdown）
     venv = libexec/"meetap-venv"
     system "python3", "-m", "venv", "--system-site-packages", venv.to_s
-    system venv/"bin/pip", "install", "-q", "--timeout", "60", "boto3", "PyMuPDF"
+    system venv/"bin/pip", "install", "-q", "--timeout", "60", "boto3==1.40.0", "markdown"
     bin.install_symlink venv => "meetap-venv"
-  end
-
-  def post_install
-    unless system("brew", "list", "--cask", "blackhole-2ch", out: File::NULL, err: File::NULL)
-      ohai "Installing BlackHole 2ch (virtual audio driver)..."
-      system "brew", "install", "--cask", "blackhole-2ch"
-    end
-    ohai "Restarting Core Audio to detect BlackHole..."
-    unless system("sudo", "killall", "coreaudiod")
-      opoo "Could not restart coreaudiod. If BlackHole is not detected, run: sudo killall coreaudiod"
-    end
-    sleep 3
   end
 
   def caveats
@@ -60,13 +72,26 @@ class Meetap < Formula
 
         aws configure
 
-      A default config is auto-created at ~/.config/meetap/config on
-      first run. Edit it any time with:
+      Audio capture (macOS 14.4+): MeeTap uses Core Audio Process Tap by
+      default — no virtual audio driver needed. Run the one-time permission
+      check before your first meeting:
+
+        meetap setup
+
+      This verifies the "System Audio Recording" permission and guides you
+      through granting it if needed.
+
+      Older macOS (13.x) falls back to the BlackHole virtual driver. Install
+      it only if you are on 13.x or set audio_capture=blackhole:
+
+        brew install blackhole-2ch
+        sudo killall coreaudiod      # let the system detect it
+
+      A default config is auto-created at ~/.config/meetap/config on first
+      run. Edit it any time with:
 
         meetap config          # opens $EDITOR
         meetap config show     # prints current values
-
-      Default config template: #{etc}/meetap/config.default
     EOS
   end
 
