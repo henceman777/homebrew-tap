@@ -5,10 +5,10 @@ class Meetap < Formula
   sha256 "00ff0adeb87b3c9390385caf25a29af160ef6a2594bfb1f512795781cb12a821"
   license "MIT"
 
-  depends_on :macos
   depends_on "ffmpeg"
-  depends_on "switchaudio-osx"
+  depends_on :macos
   depends_on "python@3"
+  depends_on "switchaudio-osx"
 
   def install
     odie "Xcode Command Line Tools required: xcode-select --install" unless which("swiftc")
