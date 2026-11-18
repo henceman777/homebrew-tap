@@ -6,9 +6,9 @@ class Meetap < Formula
   license "MIT"
 
   depends_on "ffmpeg"
-  depends_on :macos
+  # Homebrew 只能按大版本限制（Sonoma = 14.x）；meetap 2.0 需要 14.4+，由 meetap start / setup 运行时检查
+  depends_on macos: :sonoma
   depends_on "python@3"
-  depends_on "switchaudio-osx"
 
   def install
     odie "Xcode Command Line Tools required: xcode-select --install" unless which("swiftc")
@@ -18,12 +18,6 @@ class Meetap < Formula
            "-framework", "AudioToolbox",
            "src/audio-multi-output.swift",
            "-o", buildpath/"audio-multi-output"
-
-    system "swiftc", "-O",
-           "-framework", "CoreAudio",
-           "-framework", "AudioToolbox",
-           "src/audio-monitor.swift",
-           "-o", buildpath/"audio-monitor"
 
     # audio-tap 必须嵌入 Info.plist（NSAudioCaptureUsageDescription），否则 TCC
     # 不弹授权框、静默拒绝，Process Tap 输出全零静音（macOS 14.4+ 主采集路径）。
@@ -39,7 +33,6 @@ class Meetap < Formula
 
     bin.install "src/meetap"
     bin.install buildpath/"audio-multi-output"
-    bin.install buildpath/"audio-monitor"
     bin.install buildpath/"audio-tap"
 
     # bin.install 复制会破坏 ad-hoc 签名（带 __info_plist 段尤甚），TCC 判定签名
@@ -72,20 +65,20 @@ class Meetap < Formula
 
         aws configure
 
-      Audio capture (macOS 14.4+): MeeTap uses Core Audio Process Tap by
-      default — no virtual audio driver needed. Run the one-time permission
+      Requires macOS 14.4 or later. MeeTap captures audio with the built-in
+      Core Audio Process Tap — no virtual audio driver needed. Run the one-time
       check before your first meeting:
 
         meetap setup
 
-      This verifies the "System Audio Recording" permission and guides you
-      through granting it if needed.
+      It verifies the "System Audio Recording" permission (and guides you
+      through granting it), and after upgrading from 1.x checks whether system
+      output or meeting apps still point at BlackHole.
 
-      Older macOS (13.x) falls back to the BlackHole virtual driver. Install
-      it only if you are on 13.x or set audio_capture=blackhole:
+      Upgrading from 1.x: BlackHole is no longer used. You may uninstall it if
+      nothing else needs it (optional):
 
-        brew install blackhole-2ch
-        sudo killall coreaudiod      # let the system detect it
+        brew uninstall --cask blackhole-2ch
 
       A default config is auto-created at ~/.config/meetap/config on first
       run. Edit it any time with:
