@@ -13,9 +13,16 @@ class Meetap < Formula
   def install
     odie "Xcode Command Line Tools required: xcode-select --install" unless which("swiftc")
 
+    # audio-multi-output 嵌入 Info.plist（日历用途说明），否则 EventKit 不让读日历
     system "swiftc", "-O",
            "-framework", "CoreAudio",
            "-framework", "AudioToolbox",
+           "-framework", "IOKit",
+           "-framework", "EventKit",
+           "-Xlinker", "-sectcreate",
+           "-Xlinker", "__TEXT",
+           "-Xlinker", "__info_plist",
+           "-Xlinker", "src/audio-multi-output-Info.plist",
            "src/audio-multi-output.swift",
            "-o", buildpath/"audio-multi-output"
 
@@ -38,6 +45,7 @@ class Meetap < Formula
     # bin.install 复制会破坏 ad-hoc 签名（带 __info_plist 段尤甚），TCC 判定签名
     # 无效后内核会在创建 Process Tap 时 SIGKILL 进程。安装后必须重新签名。
     system "codesign", "--force", "--sign", "-", bin/"audio-tap"
+    system "codesign", "--force", "--sign", "-", bin/"audio-multi-output"
 
     # meetap 通过 SCRIPT_DIR/../src/lib/ui.sh 加载终端 UI 辅助脚本
     (prefix/"src/lib").install "src/lib/ui.sh"
